@@ -13,71 +13,87 @@ class GameService
         private EntityManagerInterface $entityManager
     ) {}
 
-    public function getRandomCards(int $count, ?Card $excludeCard = null): array
+    /**
+     * Genera un conjunto de cartas aleatorias para la partida
+     * - Crea todas las cartas posibles (1-10 de cada palo)
+     * - Las mezcla y devuelve la cantidad solicitada
+     */
+    public function getRandomCards(int $count): array
     {
-        $suits = ['hearts', 'diamonds', 'clubs', 'spades'];
         $cards = [];
-        
+        $numbers = range(1, 10);
+        $suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+
+        // Crea el mazo completo de cartas
         foreach ($suits as $suit) {
-            $qb = $this->entityManager->createQueryBuilder()
-                ->select('c')
-                ->from(Card::class, 'c')
-                ->where('c.suit = :suit')
-                ->setParameter('suit', $suit);
-
-            if ($excludeCard) {
-                $qb->andWhere('c.id != :excludeId')
-                   ->setParameter('excludeId', $excludeCard->getId());
-            }
-
-            $cardsOfSuit = $qb->getQuery()->getResult();
-            if (!empty($cardsOfSuit)) {
-                // Seleccionar una carta aleatoria de este palo
-                $randomCard = $cardsOfSuit[array_rand($cardsOfSuit)];
-                $cards[] = $randomCard;
+            foreach ($numbers as $number) {
+                $card = new Card();
+                $card->setNumber($number);
+                $card->setSuit($suit);
+                $this->entityManager->persist($card);
+                $cards[] = $card;
             }
         }
         
-        return $cards;
+        $this->entityManager->flush();
+        
+        // Mezcla y devuelve las cartas solicitadas
+        shuffle($cards);
+        return array_slice($cards, 0, $count);
     }
 
+    /**
+     * Determina el ganador de la partida según las reglas:
+     * 1. Gana la pareja más alta
+     * 2. Si solo uno tiene pareja, ese gana
+     * 3. Si nadie tiene pareja, gana la carta más alta
+     */
     public function determineWinner(Game $game): ?User
     {
-        $card1 = $game->getPlayer1Card();
-        $card2 = $game->getPlayer2Card();
+        $player1Cards = [$game->getPlayer1Card1(), $game->getPlayer1Card2()];
+        $player2Cards = [$game->getPlayer2Card1(), $game->getPlayer2Card2()];
 
-        // Obtener los valores base de las cartas
-        $value1 = $card1->getNumber();
-        $value2 = $card2->getNumber();
+        // Comprueba si hay parejas
+        $player1Pair = $this->hasPair($player1Cards);
+        $player2Pair = $this->hasPair($player2Cards);
 
-        // Aplicar bonus basado en las ventajas entre palos
-        $value1 += $this->calculateSuitBonus($card1->getSuit(), $card2->getSuit());
-        $value2 += $this->calculateSuitBonus($card2->getSuit(), $card1->getSuit());
+        // Si ambos tienen pareja, gana la más alta
+        if ($player1Pair && $player2Pair) {
+            if ($player1Pair > $player2Pair) {
+                return $game->getPlayer1();
+            } elseif ($player2Pair > $player1Pair) {
+                return $game->getPlayer2();
+            }
+            return null; // Empate si las parejas son iguales
+        }
 
-        if ($value1 > $value2) {
+        // Si solo uno tiene pareja, ese gana
+        if ($player1Pair) return $game->getPlayer1();
+        if ($player2Pair) return $game->getPlayer2();
+
+        // Si nadie tiene pareja, gana la carta más alta
+        $player1Highest = max($player1Cards[0]->getNumber(), $player1Cards[1]->getNumber());
+        $player2Highest = max($player2Cards[0]->getNumber(), $player2Cards[1]->getNumber());
+
+        if ($player1Highest > $player2Highest) {
             return $game->getPlayer1();
-        } elseif ($value2 > $value1) {
+        } elseif ($player2Highest > $player1Highest) {
             return $game->getPlayer2();
         }
 
-        return null; // Empate
+        return null; // Empate si las cartas más altas son iguales
     }
 
-    private function calculateSuitBonus(string $suit1, string $suit2): int
+    /**
+     * Comprueba si hay una pareja entre las cartas
+     * Devuelve el número de la pareja o null si no hay
+     */
+    private function hasPair(array $cards): ?int
     {
-        $advantages = [
-            'diamonds' => 'hearts',
-            'hearts' => 'spades',
-            'spades' => 'clubs',
-            'clubs' => 'diamonds'
-        ];
-
-        // Si el palo1 tiene ventaja sobre el palo2, retorna el bonus
-        if (isset($advantages[$suit1]) && $advantages[$suit1] === $suit2) {
-            return 10;
+        if ($cards[0]->getNumber() === $cards[1]->getNumber()) {
+            return $cards[0]->getNumber();
         }
-
-        return 0;
+        return null;
     }
 
     public function dealInitialCards(Game $game): void
@@ -94,45 +110,4 @@ class GameService
         // Guardar las cartas disponibles en el juego
         $game->setAvailableCards($availableCards);
     }
-
-
-
-
-        //   /**
-    //  * Verifica si un conjunto de cartas tiene una pareja.
-    //  *
-    //  * @param Card[] $cards Las cartas a evaluar.
-    //  * @return int|null El valor de la pareja, o null si no hay pareja.
-    //  */
-    // private function hasPair(array $cards): ?int
-    // {
-    //     $numbers = array_map(fn($card) => $card->getNumber(), $cards);
-    //     $counts = array_count_values($numbers);
-    //     foreach ($counts as $number => $count) {
-    //         if ($count >= 2) {
-    //             return $number;
-    //         }
-    //     }
-    //     return null;
-    // }
-        // public function determineWinner(Game $game): ?User
-    // {
-    //     $player1Cards = [$game->getPlayer1Card1(), $game->getPlayer1Card2()];
-    //     $player2Cards = [$game->getPlayer2Card1(), $game->getPlayer2Card2()];
-
-    //     $player1Pair = $this->hasPair($player1Cards);
-    //     $player2Pair = $this->hasPair($player2Cards);
-
-    //     if ($player1Pair && $player2Pair) {
-    //         return $player1Pair > $player2Pair ? $game->getPlayer1() : $game->getPlayer2();
-    //     } elseif ($player1Pair) {
-    //         return $game->getPlayer1();
-    //     } elseif ($player2Pair) {
-    //         return $game->getPlayer2();
-    //     } else {
-    //         $player1Highest = max(array_map(fn($card) => $card->getNumber(), $player1Cards));
-    //         $player2Highest = max(array_map(fn($card) => $card->getNumber(), $player2Cards));
-    //         return $player1Highest > $player2Highest ? $game->getPlayer1() : $game->getPlayer2();
-    //     }
-    // }
 } 

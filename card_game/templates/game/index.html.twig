@@ -1,10 +1,10 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Lista de Juegos{% endblock %}
+{% block title %}Listado de Partidas{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1>Lista de Juegos</h1>
+    <h1>Listado de Partidas</h1>
 
     {% for message in app.flashes('success') %}
         <div class="alert alert-success">
@@ -25,7 +25,7 @@
             </form>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{{ path('game_new') }}" class="btn btn-primary">Crear Nuevo Juego</a>
+            <a href="{{ path('game_new') }}" class="btn btn-primary">Crear Nueva Partida</a>
         </div>
     </div>
 
@@ -35,61 +35,97 @@
         </div>
     {% endif %}
 
-    <div class="row">
-        {% for game in games %}
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        Juego #{{ game.id }}
-                    </div>
-                    <div class="card-body">
-                        <p>Estado: 
-                            {% if game.status == 'waiting' %}
-                                <span class="badge bg-warning">Esperando jugador</span>
-                            {% elseif game.status == 'open' %}
-                                <span class="badge bg-info">En curso</span>
-                            {% elseif game.status == 'finished' and game.winner %}
-                                <span class="badge bg-success">Finalizada</span>
-                            {% elseif game.status == 'finished' and not game.winner and (game.player1Card or game.player2Card) %}
-                                <span class="badge bg-secondary">Empate</span>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Jugador 1</th>
+                    <th>Cartas J1</th>
+                    <th>Jugador 2</th>
+                    <th>Cartas J2</th>
+                    <th>Estado</th>
+                    <th>Ganador</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for game in games %}
+                <tr>
+                    <td>{{ game.id }}</td>
+                    <td>{{ game.player1.username }}</td>
+                    <td>
+                        {% if game.player1Card1 and game.player1Card2 %}
+                            {% if game.status == 'finished' or app.user == game.player1 %}
+                                {{ game.player1Card1.number }} y {{ game.player1Card2.number }}
                             {% else %}
-                                <span class="badge bg-purple" style="background-color: purple;">Cerrada</span>
+                                Cartas seleccionadas
                             {% endif %}
-                        </p>
-                        <p>Jugador 1: {{ game.player1.username }}</p>
-                        <p>
-                            {% if game.player2 %}
-                                Jugador 2: {{ game.player2.username }}
+                        {% else %}
+                            Sin seleccionar
+                        {% endif %}
+                    </td>
+                    <td>{{ game.player2 ? game.player2.username : 'Pendiente' }}</td>
+                    <td>
+                        {% if game.player2Card1 and game.player2Card2 %}
+                            {% if game.status == 'finished' or app.user == game.player2 %}
+                                {{ game.player2Card1.number }} y {{ game.player2Card2.number }}
                             {% else %}
-                                Esperando jugador 2
+                                Cartas seleccionadas
                             {% endif %}
-                        </p>
-
+                        {% else %}
+                            Sin seleccionar
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if game.status == 'open' %}
+                            <span class="badge bg-success">Abierta</span>
+                        {% elseif game.status == 'waiting' %}
+                            <span class="badge bg-warning">Esperando</span>
+                        {% elseif game.status == 'finished' %}
+                            <span class="badge bg-info">Terminada</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if game.winner %}
+                            {{ game.winner.username }}
+                        {% elseif game.status == 'finished' %}
+                            Empate
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
                         <div class="btn-group">
-                            <a href="{{ path('game_show', {'id': game.id}) }}" class="btn btn-info">Ver Detalles</a>
+                            <a href="{{ path('game_show', {'id': game.id}) }}" class="btn btn-sm btn-info">Ver</a>
                             
-                            {% if app.user == game.player1 and game.status != 'finished' or is_granted('ROLE_ADMIN') %}
-                                <form method="post" action="{{ path('game_close', {'id': game.id}) }}" style="display: inline-block" onsubmit="return confirm('¿Estás seguro de que quieres cerrar esta partida?');">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('close' ~ game.id) }}">
-                                    <button type="submit" class="btn btn-warning">Cerrar Partida</button>
-                                </form>
-                            {% endif %}
-
-                            {% if app.user == game.player1 or is_granted('ROLE_ADMIN') %}
-                                <form method="post" action="{{ path('game_delete', {'id': game.id}) }}" style="display: inline-block" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta partida?');">
+                            {% if is_granted('ROLE_ADMIN') or app.user == game.player1 %}
+                                {% if game.status != 'finished' %}
+                                    <form method="post" action="{{ path('game_close', {'id': game.id}) }}" style="display: inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('close' ~ game.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('¿Estás seguro de que quieres cerrar esta partida?')">
+                                            Cerrar
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                
+                                <form method="post" action="{{ path('game_delete', {'id': game.id}) }}" style="display: inline;">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ game.id) }}">
-                                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar esta partida?')">
+                                        Eliminar
+                                    </button>
                                 </form>
                             {% endif %}
                         </div>
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <div class="col-12">
-                <p class="text-center">No hay partidas disponibles</p>
-            </div>
-        {% endfor %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8">No se encontraron partidas</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %} 

@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Repository\GameRepository;
 
 #[Route('/game')]
 class GameController extends AbstractController
@@ -42,29 +43,31 @@ class GameController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'game_new', methods: ['GET', 'POST'])]
-    public function new(Request $request): Response
+    /**
+     * Crea una nueva partida
+     * - Genera 8 cartas aleatorias
+     * - Establece el jugador actual como Player1
+     * - Almacena las cartas disponibles para la partida
+     */
+    #[Route('/new', name: 'game_new', methods: ['GET'])]
+    public function new(): Response
     {
-        if ($request->isMethod('POST')) {
-            $cardId = $request->request->get('card');
-            $selectedCard = $this->entityManager->getRepository(Card::class)->find($cardId);
-            
-            $game = new Game();
-            $game->setPlayer1($this->getUser());
-            $game->setPlayer1Card($selectedCard);
-            $game->setStatus('open');
-            
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            
-            return $this->redirectToRoute('game_show', ['id' => $game->getId()]);
-        }
-
-        $cards = $this->gameService->getRandomCards(2);
+        $game = new Game();
+        $game->setPlayer1($this->getUser());
+        $game->setStatus('open');
         
-        return $this->render('game/new.html.twig', [
-            'cards' => $cards,
-        ]);
+        // Genera 8 cartas aleatorias para que ambos jugadores vean las mismas
+        $availableCards = $this->gameService->getRandomCards(8);
+        $cardIds = array_map(function($card) {
+            return $card->getId();
+        }, $availableCards);
+        
+        $game->setAvailableCards($cardIds);
+        
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
+        
+        return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
     }
 
     #[Route('/{id}', name: 'game_show', methods: ['GET'])]
@@ -80,158 +83,130 @@ class GameController extends AbstractController
         ]);
     }
 
+    /**
+     * Permite a un segundo jugador unirse a la partida
+     * - Verifica que la partida esté abierta
+     * - Comprueba que no sea el mismo jugador que la creó
+     * - Actualiza el estado según si el jugador 1 ya jugó
+     */
     #[Route('/{id}/join', name: 'game_join', methods: ['POST'])]
-    public function join(?Game $game = null): Response
+    public function join(Request $request, Game $game): Response
     {
-        if (!$game) {
-            $this->addFlash('error', 'El juego no existe.');
+        // Solo se puede unir si la partida está abierta
+        if ($game->getStatus() !== 'open') {
+            $this->addFlash('error', 'Esta partida no está disponible.');
             return $this->redirectToRoute('game_index');
         }
 
-        if ($game->getStatus() !== 'open' || $game->getPlayer2() !== null) {
-            throw $this->createAccessDeniedException('No puedes unirte a este juego.');
+        // No puede unirse el mismo jugador que creó la partida
+        if ($game->getPlayer1() === $this->getUser()) {
+            $this->addFlash('error', 'No puedes unirte a tu propia partida.');
+            return $this->redirectToRoute('game_index');
         }
 
+        // Verificar que no hay jugador 2
+        if ($game->getPlayer2() !== null) {
+            $this->addFlash('error', 'Esta partida ya tiene dos jugadores.');
+            return $this->redirectToRoute('game_index');
+        }
+
+        // Unir al jugador
         $game->setPlayer2($this->getUser());
+        
+        // Si el jugador 1 ya seleccionó, la partida queda en espera
+        if ($game->getPlayer1Card1() && $game->getPlayer1Card2()) {
+            $game->setStatus('waiting');
+        }
+
         $this->entityManager->flush();
 
+        $this->addFlash('success', '¡Te has unido a la partida! Selecciona tus cartas.');
         return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
     }
 
+    /**
+     * Maneja la selección de cartas para ambos jugadores
+     * - Verifica que el jugador pueda jugar
+     * - Permite seleccionar exactamente 2 cartas
+     * - Actualiza el estado del juego según las selecciones
+     * - Determina el ganador cuando ambos han jugado
+     */
     #[Route('/{id}/play', name: 'game_play', methods: ['GET', 'POST'])]
-    public function play(Request $request, ?Game $game = null): Response
+    public function play(Request $request, Game $game, GameRepository $gameRepository): Response
     {
-        if (!$game) {
-            $this->addFlash('error', 'El juego no existe.');
+        $currentUser = $this->getUser();
+        
+        // Verifica que el usuario sea parte de la partida
+        if ($currentUser !== $game->getPlayer1() && $currentUser !== $game->getPlayer2()) {
+            $this->addFlash('error', 'No eres parte de esta partida.');
             return $this->redirectToRoute('game_index');
         }
 
-        // Verificar que el juego está en estado correcto
-        if ($game->getStatus() !== 'open' && $game->getStatus() !== 'waiting') {
-            throw $this->createAccessDeniedException('No puedes jugar en este juego.');
-        }
-
-        // Verificar que el usuario actual es uno de los jugadores y no ha seleccionado carta
-        $currentUser = $this->getUser();
-        $canPlay = false;
-
-        if ($currentUser === $game->getPlayer1() && !$game->getPlayer1Card()) {
-            $canPlay = true;
-        } elseif ($currentUser === $game->getPlayer2() && !$game->getPlayer2Card()) {
-            $canPlay = true;
-        }
-
-        if (!$canPlay) {
-            $this->addFlash('error', 'No es tu turno o ya has seleccionado una carta.');
+        // Verifica que el jugador no haya seleccionado ya sus cartas
+        if (($currentUser === $game->getPlayer1() && $game->getPlayer1Card1()) ||
+            ($currentUser === $game->getPlayer2() && $game->getPlayer2Card1())) {
+            $this->addFlash('error', 'Ya has seleccionado tus cartas.');
             return $this->redirectToRoute('game_show', ['id' => $game->getId()]);
         }
 
+        // Obtiene las cartas disponibles para la partida
+        $availableCardIds = $game->getAvailableCards();
+        $availableCards = $this->entityManager->getRepository(Card::class)
+            ->findBy(['id' => $availableCardIds]);
+
         if ($request->isMethod('POST')) {
-            $cardId = $request->request->get('card');
-            $selectedCard = $this->entityManager->getRepository(Card::class)->find($cardId);
+            $selectedCards = $request->request->all('selected_cards');
             
-            if (!$selectedCard) {
-                $this->addFlash('error', 'Carta no válida.');
+            // Valida que se seleccionen exactamente 2 cartas
+            if (!is_array($selectedCards) || count($selectedCards) !== 2) {
+                $this->addFlash('error', 'Debes seleccionar exactamente 2 cartas.');
+                return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
+            }
+
+            // Obtiene las cartas seleccionadas de la base de datos
+            $card1 = $this->entityManager->getRepository(Card::class)->find($selectedCards[0]);
+            $card2 = $this->entityManager->getRepository(Card::class)->find($selectedCards[1]);
+
+            if (!$card1 || !$card2) {
+                $this->addFlash('error', 'Una o ambas cartas seleccionadas no son válidas.');
                 return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
             }
 
             if ($currentUser === $game->getPlayer1()) {
-                $game->setPlayer1Card($selectedCard);
+                $game->setPlayer1Card1($card1);
+                $game->setPlayer1Card2($card2);
+                // Actualiza el estado según si hay jugador 2
+                if (!$game->getPlayer2()) {
+                    $game->setStatus('open');
+                } else {
+                    $game->setStatus('waiting');
+                }
             } else {
-                $game->setPlayer2Card($selectedCard);
+                $game->setPlayer2Card1($card1);
+                $game->setPlayer2Card2($card2);
+                
+                // Si ambos jugadores han seleccionado, determina el ganador
+                if ($game->getPlayer1Card1() && $game->getPlayer1Card2()) {
+                    $game->setStatus('finished');
+                    $winner = $this->gameService->determineWinner($game);
+                    if ($winner) {
+                        $game->setWinner($winner);
+                    }
+                }
             }
 
-            // Actualizar estado del juego
-            if ($game->getPlayer1Card() && $game->getPlayer2Card()) {
-                $game->setStatus('finished');
-                $winner = $this->gameService->determineWinner($game);
-                if ($winner) {
-                    $game->setWinner($winner);
-                }
-            } elseif ($game->getStatus() === 'waiting') {
-                $game->setStatus('open');
-            }
-            
             $this->entityManager->flush();
+            
+            $this->addFlash('success', 'Has seleccionado tus cartas correctamente.');
             return $this->redirectToRoute('game_show', ['id' => $game->getId()]);
         }
 
-        $cards = $this->gameService->getRandomCards(4);
-        
         return $this->render('game/play.html.twig', [
             'game' => $game,
-            'cards' => $cards,
+            'cards' => $availableCards
         ]);
     }
-// #[Route('/{id}/play', name: 'game_play', methods: ['GET', 'POST'])]
-// public function play(Request $request, ?Game $game = null): Response
-// {
-//     if (!$game) {
-//         $this->addFlash('error', 'El juego no existe.');
-//         return $this->redirectToRoute('game_index');
-//     }
 
-//     // Verificar que el juego está en estado correcto
-//     if ($game->getStatus() !== 'open' && $game->getStatus() !== 'waiting') {
-//         throw $this->createAccessDeniedException('No puedes jugar en este juego.');
-//     }
-
-//     // Verificar que el usuario actual es uno de los jugadores y no ha seleccionado carta
-//     $currentUser = $this->getUser();
-//     $canPlay = false;
-
-//     if ($currentUser === $game->getPlayer1() && (!$game->getPlayer1Card1() || !$game->getPlayer1Card2())) {
-//         $canPlay = true;
-//     } elseif ($currentUser === $game->getPlayer2() && (!$game->getPlayer2Card1() || !$game->getPlayer2Card2())) {
-//         $canPlay = true;
-//     }
-
-//     if (!$canPlay) {
-//         $this->addFlash('error', 'No es tu turno o ya has seleccionado tus cartas.');
-//         return $this->redirectToRoute('game_show', ['id' => $game->getId()]);
-//     }
-
-//     if ($request->isMethod('POST')) {
-//         $cardId1 = $request->request->get('card1');
-//         $cardId2 = $request->request->get('card2');
-//         $selectedCard1 = $this->entityManager->getRepository(Card::class)->find($cardId1);
-//         $selectedCard2 = $this->entityManager->getRepository(Card::class)->find($cardId2);
-
-//         if (!$selectedCard1 || !$selectedCard2) {
-//             $this->addFlash('error', 'Carta no válida.');
-//             return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
-//         }
-
-//         if ($currentUser === $game->getPlayer1()) {
-//             $game->setPlayer1Card1($selectedCard1);
-//             $game->setPlayer1Card2($selectedCard2);
-//         } else {
-//             $game->setPlayer2Card1($selectedCard1);
-//             $game->setPlayer2Card2($selectedCard2);
-//         }
-
-//         // Actualizar estado del juego
-//         if ($game->getPlayer1Card1() && $game->getPlayer1Card2() && $game->getPlayer2Card1() && $game->getPlayer2Card2()) {
-//             $game->setStatus('finished');
-//             $winner = $this->gameService->determineWinner($game);
-//             if ($winner) {
-//                 $game->setWinner($winner);
-//             }
-//         } elseif ($game->getStatus() === 'waiting') {
-//             $game->setStatus('open');
-//         }
-
-//         $this->entityManager->flush();
-//         return $this->redirectToRoute('game_show', ['id' => $game->getId()]);
-//     }
-
-//     $cards = $this->gameService->getRandomCards(4);
-
-//     return $this->render('game/play.html.twig', [
-//         'game' => $game,
-//         'cards' => $cards,
-//     ]);
-// }
     #[Route('/game/my-games', name: 'game_my_games', methods: ['GET'])]
     public function myGames(): Response
     {

@@ -1,35 +1,66 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Selecciona una carta{% endblock %}
+{% block title %}Selecciona dos cartas{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1>Selecciona una carta</h1>
-    <div class="row">
-        {% for card in cards %}
-            <div class="col-md-3">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            {{ card.getNumber() }} de 
-                            {% if card.getSuit() == 'hearts' %}♥️ Corazones
-                            {% elseif card.getSuit() == 'diamonds' %}♦️ Diamantes
-                            {% elseif card.getSuit() == 'clubs' %}♣️ Tréboles
-                            {% elseif card.getSuit() == 'spades' %}♠️ Picas
-                            {% endif %}
-                        </h5>
-                        <form method="post">
-                            <input type="hidden" name="card" value="{{ card.getId() }}">
-                            <button type="submit" class="btn btn-primary">Seleccionar</button>
-                        </form>
+    <h1>Selecciona dos cartas</h1>
+    
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <form method="post" action="{{ path('game_play', {'id': game.id}) }}">
+        <div class="row">
+            {% for card in cards %}
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">
+                                {{ card.number }} de 
+                                {% if card.suit == 'hearts' %}♥️ Corazones
+                                {% elseif card.suit == 'diamonds' %}♦️ Diamantes
+                                {% elseif card.suit == 'clubs' %}♣️ Tréboles
+                                {% elseif card.suit == 'spades' %}♠️ Picas
+                                {% endif %}
+                            </h5>
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                       name="selected_cards[]" 
+                                       value="{{ card.id }}" 
+                                       class="form-check-input"
+                                       id="card_{{ card.id }}">
+                                <label class="form-check-label" for="card_{{ card.id }}">
+                                    Seleccionar esta carta
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
 
-    <div class="mt-3">
-        <a href="{{ path('game_show', {'id': game.id}) }}" class="btn btn-secondary">Volver al Juego</a>
-    </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Jugar con las cartas seleccionadas</button>
+            <a href="{{ path('game_show', {'id': game.id}) }}" class="btn btn-secondary">
+                Volver al Juego
+            </a>
+        </div>
+    </form>
 </div>
+
+<style>
+.card {
+    margin-bottom: 1rem;
+}
+.card-body {
+    padding: 1rem;
+}
+.card.selected {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+</style>
 {% endblock %} 

@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Detalles del Juego{% endblock %}
+{% block title %}Partida #{{ game.id }}{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1>Detalles del Juego</h1>
-
+    <h1>Partida #{{ game.id }}</h1>
+    
     <div class="row">
         <div class="col-md-6">
             <div class="card mb-3">
@@ -16,21 +16,23 @@
                     {% endif %}
                 </div>
                 <div class="card-body">
-                    {% if game.player1Card %}
+                    {% if game.player1Card1 and game.player1Card2 %}
                         {% if game.status == 'finished' or app.user == game.player1 %}
-                            <h5 class="card-title">
-                                {{ game.player1Card.getNumber() }} de 
-                                {% if game.player1Card.getSuit() == 'hearts' %}♥️ Corazones
-                                {% elseif game.player1Card.getSuit() == 'diamonds' %}♦️ Diamantes
-                                {% elseif game.player1Card.getSuit() == 'clubs' %}♣️ Tréboles
-                                {% elseif game.player1Card.getSuit() == 'spades' %}♠️ Picas
-                                {% endif %}
-                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="card-title">Primera carta:</h5>
+                                    <img src="{{ asset('uploads/images/' ~ game.player1Card1.image) }}" class="img-fluid" alt="Carta 1">
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="card-title">Segunda carta:</h5>
+                                    <img src="{{ asset('uploads/images/' ~ game.player1Card2.image) }}" class="img-fluid" alt="Carta 2">
+                                </div>
+                            </div>
                         {% else %}
-                            <p>Carta seleccionada (se revelará al final)</p>
+                            <p>Cartas seleccionadas (se revelarán al final)</p>
                         {% endif %}
                     {% else %}
-                        <p>Aún no ha seleccionado carta</p>
+                        <p>Aún no ha seleccionado cartas</p>
                     {% endif %}
                 </div>
             </div>
@@ -45,21 +47,23 @@
                     {% endif %}
                 </div>
                 <div class="card-body">
-                    {% if game.player2Card %}
+                    {% if game.player2Card1 and game.player2Card2 %}
                         {% if game.status == 'finished' or app.user == game.player2 %}
-                            <h5 class="card-title">
-                                {{ game.player2Card.getNumber() }} de 
-                                {% if game.player2Card.getSuit() == 'hearts' %}♥️ Corazones
-                                {% elseif game.player2Card.getSuit() == 'diamonds' %}♦️ Diamantes
-                                {% elseif game.player2Card.getSuit() == 'clubs' %}♣️ Tréboles
-                                {% elseif game.player2Card.getSuit() == 'spades' %}♠️ Picas
-                                {% endif %}
-                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="card-title">Primera carta:</h5>
+                                    <img src="{{ asset('uploads/images/' ~ game.player2Card1.image) }}" class="img-fluid" alt="Carta 1">
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="card-title">Segunda carta:</h5>
+                                    <img src="{{ asset('uploads/images/' ~ game.player2Card2.image) }}" class="img-fluid" alt="Carta 2">
+                                </div>
+                            </div>
                         {% else %}
-                            <p>Carta seleccionada (se revelará al final)</p>
+                            <p>Cartas seleccionadas (se revelarán al final)</p>
                         {% endif %}
                     {% else %}
-                        <p>Aún no ha seleccionado carta</p>
+                        <p>Aún no ha seleccionado cartas</p>
                     {% endif %}
                 </div>
             </div>
@@ -77,7 +81,7 @@
                             <span class="badge bg-info">En curso</span>
                         {% elseif game.status == 'finished' and game.winner %}
                             <span class="badge bg-success">Finalizada</span>
-                        {% elseif game.status == 'finished' and not game.winner and (game.player1Card or game.player2Card) %}
+                        {% elseif game.status == 'finished' and not game.winner and (game.player1Card1 or game.player2Card1) %}
                             <span class="badge bg-secondary">Empate</span>
                         {% else %}
                             <span class="badge bg-purple" style="background-color: purple;">Cerrada</span>
@@ -86,7 +90,7 @@
                     {% if game.status == 'finished' %}
                         {% if game.winner %}
                             <p class="card-text">Ganador: {{ game.winner.username }}</p>
-                        {% elseif game.player1Card or game.player2Card %}
+                        {% elseif game.player1Card1 or game.player2Card1 %}
                             <p class="card-text">¡Empate!</p>
                         {% else %}
                             <p class="card-text">Partida cerrada por el administrador</p>
@@ -97,48 +101,27 @@
         </div>
     </div>
 
-    {% if game.status == 'open' and not game.player2 and app.user != game.player1 %}
-        <div class="mt-3">
-            <form method="post" action="{{ path('game_join', {'id': game.id}) }}">
-                <button type="submit" class="btn btn-primary">Unirse al Juego</button>
-            </form>
-        </div>
-    {% endif %}
-
-    {% if (game.status in ['open', 'waiting'] and app.user == game.player1 and not game.player1Card) or 
-          (game.status == 'open' and app.user == game.player2 and not game.player2Card) %}
-        <div class="mt-3">
-            <a href="{{ path('game_play', {'id': game.id}) }}" class="btn btn-primary">
-                {% if not game.player2 %}
-                    Seleccionar Primera Carta
-                {% else %}
-                    Seleccionar Carta
-                {% endif %}
-            </a>
-        </div>
-    {% endif %}
-
-    {% if game.status == 'finished' %}
-        <div class="alert {% if game.winner %}alert-success{% else %}alert-warning{% endif %} mt-3">
-            {% if game.winner %}
-                ¡{{ game.winner.username }} ha ganado la partida!
-            {% else %}
-                ¡Empate!
-            {% endif %}
-        </div>
-    {% endif %}
-
-    {% if game.status == 'finished' and (app.user == game.player1 or app.user == game.player2) %}
-        <div class="mt-3 text-center">
-            <form method="post" action="{{ path('game_rematch', {'id': game.id}) }}" style="display: inline-block">
-                <input type="hidden" name="_token" value="{{ csrf_token('rematch' ~ game.id) }}">
-                <button type="submit" class="btn btn-primary">¡Revancha!</button>
-            </form>
-        </div>
-    {% endif %}
-
     <div class="mt-3">
-        <a href="{{ path('game_index') }}" class="btn btn-secondary">Volver a la lista</a>
+        {% if game.status != 'finished' %}
+            {% if app.user == game.player1 and not game.player1Card1 %}
+                <a href="{{ path('game_play', {'id': game.id}) }}" class="btn btn-primary">Seleccionar cartas</a>
+            {% elseif app.user == game.player2 and not game.player2Card1 %}
+                <a href="{{ path('game_play', {'id': game.id}) }}" class="btn btn-primary">Seleccionar cartas</a>
+            {% elseif not game.player2 and app.user != game.player1 %}
+                <form action="{{ path('game_join', {'id': game.id}) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-success">Unirse a la partida</button>
+                </form>
+            {% endif %}
+        {% endif %}
+        
+        <a href="{{ path('game_index') }}" class="btn btn-secondary">Volver al listado</a>
     </div>
 </div>
+
+<style>
+.img-fluid {
+    max-height: 200px;
+    width: auto;
+}
+</style>
 {% endblock %} 

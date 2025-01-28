@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Elija una carta{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+    .card { border: 1px solid #ccc; padding: 1em; margin: 1em; }
+</style>
+
+<div class="example-wrapper">
+    <h1>Bienvenido, elija una carta! ✅</h1>
+
+    <div class="cards">
+        {% for card in cards %}
+            <div class="card">
+                <h2>{{ 'Nombre - ' ~ card.name ~ ' y Valor - ' ~ card.valor }}</h2>
+                <form action="{{ path('app_game_choose', {id: card.id}) }}" method="get">
+                    <button type="submit">Elegir esta carta</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

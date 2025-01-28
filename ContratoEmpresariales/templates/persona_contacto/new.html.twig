@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New PersonaContacto{% endblock %}
+
+{% block body %}
+    <h1>Create new PersonaContacto</h1>
+
+    {{ include('persona_contacto/_form.html.twig') }}
+
+    <a href="{{ path('app_persona_contacto_index') }}">back to list</a>
+{% endblock %}

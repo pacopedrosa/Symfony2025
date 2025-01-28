@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Selecciona una carta{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Selecciona una carta</h1>
+    <div class="row">
+        {% for card in cards %}
+            <div class="col-md-3">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {{ card.getNumber() }} de 
+                            {% if card.getSuit() == 'hearts' %}♥️ Corazones
+                            {% elseif card.getSuit() == 'diamonds' %}♦️ Diamantes
+                            {% elseif card.getSuit() == 'clubs' %}♣️ Tréboles
+                            {% elseif card.getSuit() == 'spades' %}♠️ Picas
+                            {% endif %}
+                        </h5>
+                        <form method="post">
+                            <input type="hidden" name="card" value="{{ card.getId() }}">
+                            <button type="submit" class="btn btn-primary">Seleccionar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ path('game_show', {'id': game.id}) }}" class="btn btn-secondary">Volver al Juego</a>
+    </div>
+</div>
+{% endblock %} 

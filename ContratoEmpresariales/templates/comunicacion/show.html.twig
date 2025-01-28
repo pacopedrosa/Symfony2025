@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Comunicacion{% endblock %}
+
+{% block body %}
+    <h1>Comunicacion</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ comunicacion.id }}</td>
+            </tr>
+            <tr>
+                <th>Anotacion</th>
+                <td>{{ comunicacion.anotacion }}</td>
+            </tr>
+            <tr>
+                <th>nombreContacto</th>
+                <td>{{ comunicacion.nombreContacto }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_comunicacion_index') }}">back to list</a>
+
+    <a href="{{ path('app_comunicacion_edit', {'id': comunicacion.id}) }}">edit</a>
+
+    {{ include('comunicacion/_delete_form.html.twig') }}
+{% endblock %}

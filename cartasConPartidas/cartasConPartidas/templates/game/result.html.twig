@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Resultado de la Partida{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+    .card { border: 1px solid #ccc; padding: 1em; margin: 1em; }
+</style>
+
+<div class="example-wrapper">
+    <h1>Resultado de la Partida</h1>
+    <p>Partida ID: {{ match.id }}</p>
+    {% if winner %}
+        <p>Ganador: {{ winner.username }}</p>
+    {% else %}
+        <p>La partida ha terminado en empate.</p>
+    {% endif %}
+
+    <div class="cards">
+        <div class="card">
+            <h2>Tu carta: {{ 'Nombre - ' ~ userCard.name ~ ' y Valor - ' ~ userCard.valor }}</h2>
+        </div>
+        <div class="card">
+            <h2>Carta del oponente: {{ 'Nombre - ' ~ opponentCard.name ~ ' y Valor - ' ~ opponentCard.valor }}</h2>
+        </div>
+    </div>
+
+    <a href="{{ path('app_game_index') }}">Volver a jugar</a>
+</div>
+{% endblock %}

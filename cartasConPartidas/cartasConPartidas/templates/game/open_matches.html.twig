@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Partidas Abiertas{% endblock %}
+
+{% block body %}
+    <h1>Partidas Abiertas</h1>
+    <a href="{{ path('app_game_create') }}">Crear Partida</a>
+    <ul>
+        {% for match in openMatches %}
+            <li>
+                <p>Partida {{ match.id }}</p>
+                <a href="{{ path('app_game_join', {id: match.id}) }}">Unirse a la partida {{ match.id }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

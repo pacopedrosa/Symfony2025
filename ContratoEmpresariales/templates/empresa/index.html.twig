@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Empresa index{% endblock %}
+
+{% block body %}
+    <h1>Empresa index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Nif</th>
+                <th>Direccion</th>
+                <th>Telefono</th>
+                <th>Email</th>
+                <th>Visible</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set has_visible = false %}
+        {% for empresa in empresas %}
+            {% if empresa.visible %}
+                {% set has_visible = true %}
+                <tr>
+                    <td>{{ empresa.id }}</td>
+                    <td>{{ empresa.nombre }}</td>
+                    <td>{{ empresa.nif }}</td>
+                    <td>{{ empresa.direccion }}</td>
+                    <td>{{ empresa.telefono }}</td>
+                    <td>{{ empresa.email }}</td>
+                    <td>{{ empresa.visible ? 'Yes' : 'No' }}</td>
+                    <td>
+                        <a href="{{ path('app_empresa_show', {'id': empresa.id}) }}">show</a>
+                        <a href="{{ path('app_empresa_edit', {'id': empresa.id}) }}">edit</a>
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+        {% if not has_visible %}
+            <tr>
+                <td colspan="8">No records found</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_empresa_new') }}">Create new</a>
+{% endblock %}

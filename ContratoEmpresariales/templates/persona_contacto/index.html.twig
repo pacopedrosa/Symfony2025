@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}PersonaContacto index{% endblock %}
+
+{% block body %}
+    <h1>PersonaContacto index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Puesto</th>
+                <th>Telefono</th>
+                <th>Email</th>
+                <th>Visible</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set has_visible = false %}
+        {% for persona_contacto in persona_contactos %}
+            {% if persona_contacto.visible %}
+                {% set has_visible = true %}
+            <tr>
+                <td>{{ persona_contacto.id }}</td>
+                <td>{{ persona_contacto.name }}</td>
+                <td>{{ persona_contacto.puesto }}</td>
+                <td>{{ persona_contacto.telefono }}</td>
+                <td>{{ persona_contacto.email }}</td>
+                <td>{{ persona_contacto.visible }}</td>
+                <td>
+                    <a href="{{ path('app_persona_contacto_show', {'id': persona_contacto.id}) }}">show</a>
+                    <a href="{{ path('app_persona_contacto_edit', {'id': persona_contacto.id}) }}">edit</a>
+                </td>
+            </tr>
+            {% endif %}
+        {% else %}
+            <tr>
+                <td colspan="7">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_persona_contacto_new') }}">Create new</a>
+{% endblock %}

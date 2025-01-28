@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historial de Partidas{% endblock %}
+
+{% block body %}
+    <h1>Historial de Partidas</h1>
+    <ul>
+        {% for match in matchHistory %}
+            <li>
+                Partida {{ match.id }} -
+                {% if match.winner == app.user %}
+                    Ganada
+                {% elseif match.winner is null %}
+                    Empatada
+                {% else %}
+                    Perdida
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

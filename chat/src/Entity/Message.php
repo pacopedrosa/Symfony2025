@@ -19,6 +19,9 @@ class Message
     #[ORM\ManyToOne(inversedBy: 'messages')]
     private ?User $id_user = null;
 
+    #[ORM\ManyToOne(inversedBy: 'message')]
+    private ?Hall $hall = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -44,6 +47,18 @@ class Message
     public function setIdUser(?User $id_user): static
     {
         $this->id_user = $id_user;
+
+        return $this;
+    }
+
+    public function getHall(): ?Hall
+    {
+        return $this->hall;
+    }
+
+    public function setHall(?Hall $hall): static
+    {
+        $this->hall = $hall;
 
         return $this;
     }

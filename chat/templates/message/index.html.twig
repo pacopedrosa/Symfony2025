@@ -1,32 +1,31 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Bienvenido a la lista de mensajes!{% endblock %}
+{% block title %}Chat - Sala #{{ hall.id }}{% endblock %}
 
 {% block body %}
 <style>
     .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
     .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+    .message-container { border: 1px solid #ddd; margin: 10px 0; padding: 10px; border-radius: 5px; }
 </style>
 
 <div class="example-wrapper">
-    <h1>Bienvenido a la lista de mensajes ✅</h1>
+    <h1>Chat - Sala #{{ hall.id }} ✅</h1>
+    <a href="{{ path('app_hall_index') }}" class="btn btn-secondary">Volver a la lista de salas</a>
 
-
-    {% for message in messages %}
-        <p>Mensaje: {{ message.description }}</p>
-        <p>Usuario: {{ message.idUser.username }}</p>
-        <hr>
-    {% endfor %}
-
+    <div class="messages-list">
+        {% for message in messages %}
+            <div class="message-container">
+                <p><strong>{{ message.idUser.username }}</strong>: {{ message.description }}</p>
+            </div>
+        {% else %}
+            <p>No hay mensajes en esta sala todavía.</p>
+        {% endfor %}
+    </div>
 
     {{ form_start(form) }}
-    {{ form_row(form.description) }}
-        
-        <button type="submit">Enviar</button>
+        {{ form_row(form.description) }}
+        <button type="submit" class="btn btn-primary">Enviar mensaje</button>
     {{ form_end(form) }}
-
-
-
-    
 </div>
 {% endblock %}

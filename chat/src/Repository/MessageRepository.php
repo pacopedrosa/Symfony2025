@@ -15,6 +15,14 @@ class MessageRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Message::class);
     }
+    public function findByHallId($hallId)
+    {
+        return $this->createQueryBuilder('m')
+            ->where('m.hall = :hallId')
+            ->setParameter('hallId', $hallId)
+            ->getQuery()
+            ->getResult();
+    }
 
     //    /**
     //     * @return Message[] Returns an array of Message objects

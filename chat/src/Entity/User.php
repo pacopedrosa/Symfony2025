@@ -42,9 +42,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'id_user')]
     private Collection $messages;
 
+    /**
+     * @var Collection<int, Hall>
+     */
+    #[ORM\OneToMany(targetEntity: Hall::class, mappedBy: 'User')]
+    private Collection $halls;
+
     public function __construct()
     {
         $this->messages = new ArrayCollection();
+        $this->halls = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -146,6 +153,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($message->getIdUser() === $this) {
                 $message->setIdUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Hall>
+     */
+    public function getHalls(): Collection
+    {
+        return $this->halls;
+    }
+
+    public function addHall(Hall $hall): static
+    {
+        if (!$this->halls->contains($hall)) {
+            $this->halls->add($hall);
+            $hall->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHall(Hall $hall): static
+    {
+        if ($this->halls->removeElement($hall)) {
+            // set the owning side to null (unless already changed)
+            if ($hall->getUser() === $this) {
+                $hall->setUser(null);
             }
         }
 

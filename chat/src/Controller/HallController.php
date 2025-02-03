@@ -14,6 +14,11 @@ final class HallController extends AbstractController
     #[Route('/', name: 'app_hall_index', methods: ['GET'])]
     public function index(EntityManagerInterface $entityManager): Response
     {
+        // Verificar si el usuario está autenticado
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
+
         $halls = $entityManager->getRepository(Hall::class)->findActiveHalls();
 
         return $this->render('hall/index.html.twig', [
@@ -24,10 +29,13 @@ final class HallController extends AbstractController
     #[Route('/new', name: 'app_hall_new', methods: ['GET', 'POST'])]
     public function new(EntityManagerInterface $entityManager): Response
     {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
+
         $hall = new Hall();
         $hall->setUser($this->getUser());
         $hall->setStatus('active');
-        
         $entityManager->persist($hall);
         $entityManager->flush();
 

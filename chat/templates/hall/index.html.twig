@@ -65,7 +65,7 @@
         {% if hall.status == 'active' %}
             <li class="hall-item">
                 <p>Sala #{{ hall.id }}</p>
-                <p>Creada por: {{ hall.user.username }}</p>
+                <p>Creada por: {{ hall.user ? hall.user.username : 'Usuario desconocido' }}</p>
                 <p>Estado: {{ hall.status }}</p>
                 <a href="{{ path('app_message', {'hallId': hall.id}) }}" class="btn btn-primary">Entrar al chat</a>
             </li>

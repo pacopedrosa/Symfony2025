@@ -39,6 +39,6 @@ final class HallController extends AbstractController
         $entityManager->persist($hall);
         $entityManager->flush();
 
-        return $this->redirectToRoute('app_hall_index');
+        return $this->redirectToRoute('app_message', ['hallId' => $hall->getId()]);
     }
 }

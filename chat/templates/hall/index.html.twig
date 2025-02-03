@@ -22,6 +22,14 @@
         display: inline-block;
         margin: 20px 0;
     }
+    .logout-btn {
+        background-color: #f44336;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-left: auto;
+    }
     .btn {
         padding: 8px 16px;
         text-decoration: none;
@@ -45,10 +53,19 @@
         border-color: #f5c6cb;
         color: #721c24;
     }
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
 </style>
 
 <div class="example-wrapper">
-    <h1>Lista de Salas</h1>
+    <div class="header-container">
+        <h1>Lista de Salas</h1>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
 
     {% for label, messages in app.flashes %}
         {% for message in messages %}

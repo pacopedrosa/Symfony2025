@@ -27,16 +27,15 @@ final class MessageController extends AbstractController
         $entityManager->getRepository(User::class)
             ->updateUserCurrentHall($this->getUser(), $hall);
 
-        $messages = $entityManager->getRepository(Message::class)->findByHallId($hall->getId());
-        $users = $entityManager->getRepository(User::class)->findAll();
+
 
         $message = new Message();
-        $message->setIdUser($this->getUser());
-        $message->setHall($hall);
         $form = $this->createForm(MessageType::class, $message);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()){
+            $message->setIdUser($this->getUser());
+            $message->setHall($hall);
             $entityManager->persist($message);
             $entityManager->flush();
 
@@ -45,22 +44,26 @@ final class MessageController extends AbstractController
         }
         return $this->render('message/index.html.twig', [
             'form' => $form->createView(),            
-            'messages' => $messages,
-            'users' => $users,
             'hall' => $hall,
         ]);
     }
-    #[Route('/message/{hallId}/leave', name: 'app_message_leave')] 
-    public function leaveHall(EntityManagerInterface $entityManager, #[AttributeMapEntity(id: 'hallId')] Hall $hall): Response
+    #[Route('/message/{id}/leave', name: 'app_message_leave')] 
+    public function leaveHall(EntityManagerInterface $entityManager, Hall $hall): Response
     {
-        // Actualizar el usuario actual (removerlo de la sala)
-        $entityManager->getRepository(User::class)
-            ->updateUserCurrentHall($this->getUser(), null);
+        // Actualizar el usuario actual (removerlo de la sala)        
+        $this->getUser()->setCurrentHall(null);
+        $entityManager->flush();
         
-        // Verificar si quedan usuarios y actualizar estado de la sala
-        $entityManager->getRepository(Hall::class)
-            ->updateHallStatus($hall, $this->getUser());
+        // Verificar si quedan usuarios activos en la sala
+        $activeUsers = $entityManager->getRepository(User::class)
+            ->findActiveUsersInHall($hall, $this->getUser());
+
+        if (empty($activeUsers)) {
+            $hall->setStatus('inactive');
+            $entityManager->flush();
+        }
 
         return $this->redirectToRoute('app_hall_index');
     }
 }
+

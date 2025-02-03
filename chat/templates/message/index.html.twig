@@ -12,9 +12,9 @@
 <div class="example-wrapper">
     <h1>Chat - Sala #{{ hall.id }} ✅</h1>
     
-    <a href="{{ path('app_message_leave', {'hallId': hall.id}) }}" class="btn btn-danger">Salir del chat</a>
+    <a href="{{ path('app_message_leave', {'id': hall.id}) }}" class="btn btn-danger">Salir del chat</a>
     <div class="messages-list">
-        {% for message in messages %}
+        {% for message in hall.message %}
             <div class="message-container">
                 <p><strong>{{ message.idUser.username }}</strong>: {{ message.description }}</p>
             </div>

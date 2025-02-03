@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Hall;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -48,5 +49,19 @@ class HallRepository extends ServiceEntityRepository
             ->setParameter('status', 'active')
             ->getQuery()
             ->getResult();
+    }
+
+    public function updateHallStatus(Hall $hall, User $user): void
+    {
+        // Obtener usuarios activos en la sala excluyendo el usuario actual
+        $activeUsers = $this->getEntityManager()
+            ->getRepository(User::class)
+            ->findActiveUsersInHall($hall, $user);
+
+        // Si no quedan otros usuarios, marcar como inactiva
+        if (empty($activeUsers)) {
+            $hall->setStatus('inactive');
+            $this->getEntityManager()->flush();
+        }
     }
 }

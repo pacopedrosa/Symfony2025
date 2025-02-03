@@ -37,6 +37,8 @@ class Hall
         return $this->id;
     }
 
+    
+
     /**
      * @return Collection<int, Message>
      */

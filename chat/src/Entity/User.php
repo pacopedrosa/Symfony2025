@@ -48,6 +48,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Hall::class, mappedBy: 'User')]
     private Collection $halls;
 
+    #[ORM\ManyToOne(targetEntity: Hall::class)]
+    private ?Hall $currentHall = null;
+
     public function __construct()
     {
         $this->messages = new ArrayCollection();
@@ -186,6 +189,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
 
+        return $this;
+    }
+
+    public function getCurrentHall(): ?Hall
+    {
+        return $this->currentHall;
+    }
+
+    public function setCurrentHall(?Hall $hall): self
+    {
+        $this->currentHall = $hall;
         return $this;
     }
 }

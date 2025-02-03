@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Entity\Hall;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
@@ -57,4 +58,21 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findActiveUsersInHall(Hall $hall, User $excludeUser): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.currentHall = :hall')
+            ->andWhere('u != :excludeUser')
+            ->setParameter('hall', $hall)
+            ->setParameter('excludeUser', $excludeUser)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function updateUserCurrentHall(User $user, ?Hall $hall): void
+    {
+        $user->setCurrentHall($hall);
+        $this->getEntityManager()->flush();
+    }
 }

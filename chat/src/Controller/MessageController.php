@@ -13,7 +13,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Form\MessageType;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity as AttributeMapEntity;
 use Symfony\Component\Routing\Attribute\MapEntity;
-
 final class MessageController extends AbstractController
 {
     #[Route('/message/{hallId}', name: 'app_message')]
@@ -23,6 +22,10 @@ final class MessageController extends AbstractController
             $this->addFlash('error', 'Esta sala está inactiva y no se puede acceder.');
             return $this->redirectToRoute('app_hall_index');
         }
+
+        // Registrar que el usuario está en esta sala
+        $entityManager->getRepository(User::class)
+            ->updateUserCurrentHall($this->getUser(), $hall);
 
         $messages = $entityManager->getRepository(Message::class)->findByHallId($hall->getId());
         $users = $entityManager->getRepository(User::class)->findAll();
@@ -50,28 +53,13 @@ final class MessageController extends AbstractController
     #[Route('/message/{hallId}/leave', name: 'app_message_leave')] 
     public function leaveHall(EntityManagerInterface $entityManager, #[AttributeMapEntity(id: 'hallId')] Hall $hall): Response
     {
-        // Obtener todos los mensajes de la sala
-        $messages = $entityManager->getRepository(Message::class)->findByHallId($hall->getId());
+        // Actualizar el usuario actual (removerlo de la sala)
+        $entityManager->getRepository(User::class)
+            ->updateUserCurrentHall($this->getUser(), null);
         
-        // Obtener usuarios únicos que han enviado mensajes
-        $usersInChat = [];
-        foreach ($messages as $message) {
-            $userId = $message->getIdUser();
-            if (!in_array($userId, $usersInChat, true)) {
-                $usersInChat[] = $userId;
-            }
-        }
-        
-        // Remover el usuario actual de la lista
-        $otherUsers = array_filter($usersInChat, function($user) {
-            return $user !== $this->getUser();
-        });
-        
-        // Si no quedan otros usuarios, marcar la sala como inactiva
-        if (empty($otherUsers)) {
-            $hall->setStatus('inactive');
-            $entityManager->flush();
-        }
+        // Verificar si quedan usuarios y actualizar estado de la sala
+        $entityManager->getRepository(Hall::class)
+            ->updateHallStatus($hall, $this->getUser());
 
         return $this->redirectToRoute('app_hall_index');
     }

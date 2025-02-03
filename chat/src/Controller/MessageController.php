@@ -48,10 +48,31 @@ final class MessageController extends AbstractController
         ]);
     }
     #[Route('/message/{hallId}/leave', name: 'app_message_leave')] 
-    public function leaveHall(EntityManagerInterface $entityManager,#[AttributeMapEntity(id: 'hallId')] Hall $hall): Response
+    public function leaveHall(EntityManagerInterface $entityManager, #[AttributeMapEntity(id: 'hallId')] Hall $hall): Response
     {
-        $hall->setStatus('inactive');
-        $entityManager->flush();
+        // Obtener todos los mensajes de la sala
+        $messages = $entityManager->getRepository(Message::class)->findByHallId($hall->getId());
+        
+        // Obtener usuarios únicos que han enviado mensajes
+        $usersInChat = [];
+        foreach ($messages as $message) {
+            $userId = $message->getIdUser();
+            if (!in_array($userId, $usersInChat, true)) {
+                $usersInChat[] = $userId;
+            }
+        }
+        
+        // Remover el usuario actual de la lista
+        $otherUsers = array_filter($usersInChat, function($user) {
+            return $user !== $this->getUser();
+        });
+        
+        // Si no quedan otros usuarios, marcar la sala como inactiva
+        if (empty($otherUsers)) {
+            $hall->setStatus('inactive');
+            $entityManager->flush();
+        }
+
         return $this->redirectToRoute('app_hall_index');
     }
 }

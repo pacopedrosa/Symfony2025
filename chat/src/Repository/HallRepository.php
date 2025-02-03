@@ -40,4 +40,13 @@ class HallRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findActiveHalls()
+    {
+        return $this->createQueryBuilder('h')
+            ->where('h.status = :status')
+            ->setParameter('status', 'active')
+            ->getQuery()
+            ->getResult();
+    }
 }

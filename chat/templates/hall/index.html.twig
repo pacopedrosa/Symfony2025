@@ -22,21 +22,54 @@
         display: inline-block;
         margin: 20px 0;
     }
+    .btn {
+        padding: 8px 16px;
+        text-decoration: none;
+        border-radius: 5px;
+        display: inline-block;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+    .flash-messages {
+        margin: 10px 0;
+    }
+    .alert {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .alert-error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
 </style>
 
 <div class="example-wrapper">
-    <h1>Lista de Salas ✅</h1>
+    <h1>Lista de Salas</h1>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
 
     <a href="{{ path('app_hall_new') }}" class="create-btn">Crear Nueva Sala</a>
 
     <ul class="hall-list">
     {% for hall in halls %}
-        <li class="hall-item">
-            <p>Sala #{{ hall.id }}</p>
-            <p>Creada por: {{ hall.user.username }}</p>
-            <p>Estado: {{ hall.status }}</p>
-            <a href="{{ path('app_message', {'hallId': hall.id}) }}" class="btn btn-primary">Entrar al chat</a>
-        </li>
+        {% if hall.status == 'active' %}
+            <li class="hall-item">
+                <p>Sala #{{ hall.id }}</p>
+                <p>Creada por: {{ hall.user.username }}</p>
+                <p>Estado: {{ hall.status }}</p>
+                <a href="{{ path('app_message', {'hallId': hall.id}) }}" class="btn btn-primary">Entrar al chat</a>
+            </li>
+        {% endif %}
     {% else %}
         <li>No hay salas disponibles</li>
     {% endfor %}

@@ -17,12 +17,13 @@ use Symfony\Component\Routing\Attribute\MapEntity;
 final class MessageController extends AbstractController
 {
     #[Route('/message/{hallId}', name: 'app_message')]
-    public function index(
-        Request $request, 
-        EntityManagerInterface $entityManager,
-        #[AttributeMapEntity(id: 'hallId')] Hall $hall
-    ): Response
+    public function index(Request $request, EntityManagerInterface $entityManager,#[AttributeMapEntity(id: 'hallId')] Hall $hall): Response
     {
+        if ($hall->getStatus() === 'inactive') {
+            $this->addFlash('error', 'Esta sala está inactiva y no se puede acceder.');
+            return $this->redirectToRoute('app_hall_index');
+        }
+
         $messages = $entityManager->getRepository(Message::class)->findByHallId($hall->getId());
         $users = $entityManager->getRepository(User::class)->findAll();
 
@@ -45,5 +46,12 @@ final class MessageController extends AbstractController
             'users' => $users,
             'hall' => $hall,
         ]);
+    }
+    #[Route('/message/{hallId}/leave', name: 'app_message_leave')] 
+    public function leaveHall(EntityManagerInterface $entityManager,#[AttributeMapEntity(id: 'hallId')] Hall $hall): Response
+    {
+        $hall->setStatus('inactive');
+        $entityManager->flush();
+        return $this->redirectToRoute('app_hall_index');
     }
 }

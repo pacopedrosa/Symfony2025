@@ -11,8 +11,8 @@
 
 <div class="example-wrapper">
     <h1>Chat - Sala #{{ hall.id }} ✅</h1>
-    <a href="{{ path('app_hall_index') }}" class="btn btn-secondary">Volver a la lista de salas</a>
-
+    
+    <a href="{{ path('app_message_leave', {'hallId': hall.id}) }}" class="btn btn-danger">Salir del chat</a>
     <div class="messages-list">
         {% for message in messages %}
             <div class="message-container">

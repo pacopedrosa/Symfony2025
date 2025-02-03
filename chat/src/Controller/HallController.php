@@ -14,7 +14,7 @@ final class HallController extends AbstractController
     #[Route('/', name: 'app_hall_index', methods: ['GET'])]
     public function index(EntityManagerInterface $entityManager): Response
     {
-        $halls = $entityManager->getRepository(Hall::class)->findAll();
+        $halls = $entityManager->getRepository(Hall::class)->findActiveHalls();
 
         return $this->render('hall/index.html.twig', [
             'halls' => $halls,

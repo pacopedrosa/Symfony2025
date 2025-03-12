@@ -1,0 +1,182 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mis Tickets{% endblock %}
+
+{% block body %}
+<div class="user-container">
+    <header class="page-header">
+        <h1>Mis Tickets</h1>
+    </header>
+
+    <div class="tickets-container">
+        {% for ticket in tickets %}
+            {% if ticket.state != 2 or not ticket.assessment %}
+                <div class="ticket-card">
+                    <div class="ticket-header">
+                        <h2>{{ ticket.title }}</h2>
+                        <span class="status-badge {% if ticket.state == 0 %}status-open{% elseif ticket.state == 2 %}status-closed{% else %}status-progress{% endif %}">
+                            {% if ticket.state == 0 %}
+                                Abierto
+                            {% elseif ticket.state == 2 %}
+                                Cerrado
+                            {% elseif ticket.state == 1 %}
+                                En Curso
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="ticket-content">
+                        <p class="ticket-message">{{ ticket.message }}</p>
+                        <p class="ticket-worker">Trabajador: {{ ticket.owner ? ticket.owner.username : 'Sin asignar' }}</p>
+                    </div>
+
+                    {% if ticket.messages|length > 0 %}
+                        <div class="messages-section">
+                            <h3>Mensajes</h3>
+                            <div class="messages-list">
+                                {% for message in ticket.messages %}
+                                    <div class="message-card">
+                                        <p>{{ message.content }}</p>
+                                        <div class="message-meta">
+                                            <small>Por: {{ message.author.username }}</small>
+                                            <small>{{ message.createdAt|date('d/m/Y H:i') }}</small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="ticket-actions">
+                        {% if ticket.state == 1 %}
+                            <a href="{{ path('app_ticket_response', {'id': ticket.id}) }}" class="btn-primary">Responder</a>
+                        {% endif %}
+
+                        {% if ticket.state == 2 and not ticket.assessment %}
+                            <a href="{{ path('app_assessment_new', {'id': ticket.id}) }}" class="btn-secondary">Valorar Ticket</a>
+                        {% endif %}
+                    </div>
+
+                    {% if ticket.assessment %}
+                        <div class="assessment-info">
+                            <p>Valoración: {{ ticket.assessment.stars }} ⭐</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="page-actions">
+        <a href="{{ path('app_main') }}" class="btn-back">Volver al Inicio</a>
+    </div>
+</div>
+
+<style>
+    .user-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        color: #2c3e50;
+        font-size: 2em;
+    }
+
+    .tickets-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .ticket-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        border-left: 4px solid #3498db;
+    }
+
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .status-open { background: #e8f5e9; color: #27ae60; }
+    .status-closed { background: #ffebee; color: #c0392b; }
+    .status-progress { background: #e3f2fd; color: #2980b9; }
+
+    .ticket-content {
+        margin-bottom: 20px;
+    }
+
+    .messages-section {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .message-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+    .message-meta {
+        display: flex;
+        justify-content: space-between;
+        color: #7f8c8d;
+        margin-top: 8px;
+        font-size: 0.9em;
+    }
+
+    .ticket-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btn-primary, .btn-secondary, .btn-back {
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        color: white;
+        font-weight: 500;
+    }
+
+    .btn-primary { background-color: #3498db; }
+    .btn-secondary { background-color: #2ecc71; }
+    .btn-back { background-color: #34495e; }
+
+    .assessment-info {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    .page-actions {
+        text-align: center;
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}

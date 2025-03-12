@@ -15,18 +15,49 @@
                         <span class="badge bg-success">¡Ganador!</span>
                     {% endif %}
                 </div>
-                <div class="card-body">
-                    {% if game.player1Card1 and game.player1Card2 %}
+ ni                 <div class="card-body">
+                    {% if (game.gameMode == 1 and game.player1Card1) or 
+                          (game.gameMode == 2 and game.player1Card1 and game.player1Card2) or 
+                          (game.gameMode == 3 and game.player1Card1 and game.player1Card2 and game.player1Card3) %}
                         {% if game.status == 'finished' or app.user == game.player1 %}
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-{% if game.gameMode == 1 %}12{% elseif game.gameMode == 2 %}6{% else %}4{% endif %}">
                                     <h5 class="card-title">Primera carta:</h5>
                                     <img src="{{ asset('uploads/images/' ~ game.player1Card1.image) }}" class="img-fluid" alt="Carta 1">
+                                    <p>{{ game.player1Card1.number }} de 
+                                        {% if game.player1Card1.suit == 'hearts' %}♥️ Corazones
+                                        {% elseif game.player1Card1.suit == 'diamonds' %}♦️ Diamantes
+                                        {% elseif game.player1Card1.suit == 'clubs' %}♣️ Tréboles
+                                        {% elseif game.player1Card1.suit == 'spades' %}♠️ Picas
+                                        {% endif %}
+                                    </p>
                                 </div>
-                                <div class="col-md-6">
-                                    <h5 class="card-title">Segunda carta:</h5>
-                                    <img src="{{ asset('uploads/images/' ~ game.player1Card2.image) }}" class="img-fluid" alt="Carta 2">
-                                </div>
+                                {% if game.gameMode >= 2 and game.player1Card2 %}
+                                    <div class="col-md-{% if game.gameMode == 2 %}6{% else %}4{% endif %}">
+                                        <h5 class="card-title">Segunda carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player1Card2.image) }}" class="img-fluid" alt="Carta 2">
+                                        <p>{{ game.player1Card2.number }} de 
+                                            {% if game.player1Card2.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player1Card2.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player1Card2.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player1Card2.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                {% endif %}
+                                {% if game.gameMode == 3 and game.player1Card3 %}
+                                    <div class="col-md-4">
+                                        <h5 class="card-title">Tercera carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player1Card3.image) }}" class="img-fluid" alt="Carta 3">
+                                        <p>{{ game.player1Card3.number }} de 
+                                            {% if game.player1Card3.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player1Card3.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player1Card3.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player1Card3.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                {% endif %}
                             </div>
                         {% else %}
                             <p>Cartas seleccionadas (se revelarán al final)</p>
@@ -47,23 +78,105 @@
                     {% endif %}
                 </div>
                 <div class="card-body">
-                    {% if game.player2Card1 and game.player2Card2 %}
-                        {% if game.status == 'finished' or app.user == game.player2 %}
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5 class="card-title">Primera carta:</h5>
-                                    <img src="{{ asset('uploads/images/' ~ game.player2Card1.image) }}" class="img-fluid" alt="Carta 1">
+                    {% if game.gameMode == 1 %}
+                        {% if game.player2Card1 %}
+                            {% if game.status == 'finished' or app.user == game.player2 %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h5 class="card-title">Carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player2Card1.image) }}" class="img-fluid" alt="Carta 1">
+                                        <p>{{ game.player2Card1.number }} de 
+                                            {% if game.player2Card1.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player2Card1.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player2Card1.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player2Card1.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <h5 class="card-title">Segunda carta:</h5>
-                                    <img src="{{ asset('uploads/images/' ~ game.player2Card2.image) }}" class="img-fluid" alt="Carta 2">
-                                </div>
-                            </div>
+                            {% else %}
+                                <p>Carta seleccionada (se revelará al final)</p>
+                            {% endif %}
                         {% else %}
-                            <p>Cartas seleccionadas (se revelarán al final)</p>
+                            <p>Aún no ha seleccionado carta</p>
+                        {% endif %}
+                    {% elseif game.gameMode == 2 %}
+                        {% if game.player2Card1 and game.player2Card2 %}
+                            {% if game.status == 'finished' or app.user == game.player2 %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 class="card-title">Primera carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player2Card1.image) }}" class="img-fluid" alt="Carta 1">
+                                        <p>{{ game.player2Card1.number }} de 
+                                            {% if game.player2Card1.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player2Card1.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player2Card1.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player2Card1.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5 class="card-title">Segunda carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player2Card2.image) }}" class="img-fluid" alt="Carta 2">
+                                        <p>{{ game.player2Card2.number }} de 
+                                            {% if game.player2Card2.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player2Card2.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player2Card2.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player2Card2.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p>Cartas seleccionadas (se revelarán al final)</p>
+                            {% endif %}
+                        {% else %}
+                            <p>Aún no ha seleccionado cartas</p>
                         {% endif %}
                     {% else %}
-                        <p>Aún no ha seleccionado cartas</p>
+                        {% if game.player2Card1 and game.player2Card2 and game.player2Card3 %}
+                            {% if game.status == 'finished' or app.user == game.player2 %}
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h5 class="card-title">Primera carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player2Card1.image) }}" class="img-fluid" alt="Carta 1">
+                                        <p>{{ game.player2Card1.number }} de 
+                                            {% if game.player2Card1.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player2Card1.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player2Card1.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player2Card1.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5 class="card-title">Segunda carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player2Card2.image) }}" class="img-fluid" alt="Carta 2">
+                                        <p>{{ game.player2Card2.number }} de 
+                                            {% if game.player2Card2.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player2Card2.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player2Card2.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player2Card2.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5 class="card-title">Tercera carta:</h5>
+                                        <img src="{{ asset('uploads/images/' ~ game.player2Card3.image) }}" class="img-fluid" alt="Carta 3">
+                                        <p>{{ game.player2Card3.number }} de 
+                                            {% if game.player2Card3.suit == 'hearts' %}♥️ Corazones
+                                            {% elseif game.player2Card3.suit == 'diamonds' %}♦️ Diamantes
+                                            {% elseif game.player2Card3.suit == 'clubs' %}♣️ Tréboles
+                                            {% elseif game.player2Card3.suit == 'spades' %}♠️ Picas
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p>Cartas seleccionadas (se revelarán al final)</p>
+                            {% endif %}
+                        {% else %}
+                            <p>Aún no ha seleccionado cartas</p>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -124,4 +237,4 @@
     width: auto;
 }
 </style>
-{% endblock %} 
+{% endblock %}

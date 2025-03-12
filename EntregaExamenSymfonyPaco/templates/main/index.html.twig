@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sistema de Tickets{% endblock %}
+
+{% block body %}
+<div class="main-container">
+    <header class="main-header"> 
+        <h1>Sistema de Gestión de Tickets</h1>
+        <nav class="nav-buttons">
+            {% if app.user %}
+                {% if is_granted('ROLE_ADMIN') %}
+                    <div class="button-group admin">
+                        <button class="btn-primary">
+                            <a href="{{ path('admin_users') }}">Administrar Usuarios</a>
+                        </button>
+                        <button class="btn-primary">
+                            <a href="{{ path('app_ticket_all') }}">Ver todos los Tickets</a>
+                        </button>
+                    </div>
+                {% endif %}
+
+                {% if is_granted('ROLE_USER') and not is_granted('ROLE_TRABAJADOR') and not is_granted('ROLE_ADMIN') %}
+                    <div class="button-group user">
+                        <button class="btn-primary">
+                            <a href="{{ path('app_ticket_new') }}">Crear Ticket</a>
+                        </button>
+                        <button class="btn-secondary">
+                            <a href="{{ path('app_ticket_user') }}">Ver mis Tickets</a>
+                        </button>
+                    </div>
+                {% endif %}
+
+                {% if is_granted('ROLE_TRABAJADOR') %}
+                    <div class="button-group worker">
+                        <button class="btn-primary">
+                            <a href="{{ path('app_ticket') }}">Ver Tickets Pendientes</a>
+                        </button>
+                    </div>
+                {% endif %}
+
+                <div class="button-group auth">
+                    <button class="btn-logout">
+                        <a href="{{ path('app_logout') }}">Cerrar Sesión</a>
+                    </button>
+                </div>
+            {% else %}
+                <div class="button-group guest">
+                    <button class="btn-primary">
+                        <a href="{{ path('app_login') }}">Iniciar Sesión</a>
+                    </button>
+                    <button class="btn-secondary">
+                        <a href="{{ path('app_register') }}">Registrarse</a>
+                    </button>
+                </div>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="welcome-section">
+            <h2>¡Bienvenido al Sistema de Gestión de Tickets!</h2>
+            {% if app.user %}
+                <p>Has iniciado sesión como: <strong>{{ app.user.username }}</strong></p>
+            {% else %}
+                <p>Por favor, inicia sesión o regístrate para comenzar.</p>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .main-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .main-header h1 {
+        color: #2c3e50;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+    }
+
+    .nav-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 15px;
+        margin: 10px 0;
+    }
+
+    button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    button a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-secondary {
+        background-color: #2ecc71;
+    }
+
+    .btn-secondary:hover {
+        background-color: #27ae60;
+    }
+
+    .btn-logout {
+        background-color: #e74c3c;
+    }
+
+    .btn-logout:hover {
+        background-color: #c0392b;
+    }
+
+    .welcome-section {
+        text-align: center;
+        margin-top: 40px;
+        padding: 30px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .welcome-section h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    .welcome-section p {
+        color: #34495e;
+        font-size: 1.1em;
+    }
+</style>
+{% endblock %}

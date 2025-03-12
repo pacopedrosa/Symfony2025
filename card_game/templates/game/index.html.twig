@@ -55,26 +55,70 @@
                     <td>{{ game.id }}</td>
                     <td>{{ game.player1.username }}</td>
                     <td>
-                        {% if game.player1Card1 and game.player1Card2 %}
-                            {% if game.status == 'finished' or app.user == game.player1 %}
-                                {{ game.player1Card1.number }} y {{ game.player1Card2.number }}
+                        {% if game.gameMode == 1 %}
+                            {% if game.player1Card1 %}
+                                {% if game.status == 'finished' or app.user == game.player1 %}
+                                    {{ game.player1Card1.number }}
+                                {% else %}
+                                    Carta seleccionada
+                                {% endif %}
                             {% else %}
-                                Cartas seleccionadas
+                                Sin seleccionar
+                            {% endif %}
+                        {% elseif game.gameMode == 2 %}
+                            {% if game.player1Card1 and game.player1Card2 %}
+                                {% if game.status == 'finished' or app.user == game.player1 %}
+                                    {{ game.player1Card1.number }}, {{ game.player1Card2.number }}
+                                {% else %}
+                                    Cartas seleccionadas
+                                {% endif %}
+                            {% else %}
+                                Sin seleccionar
                             {% endif %}
                         {% else %}
-                            Sin seleccionar
+                            {% if game.player1Card1 and game.player1Card2 and game.player1Card3 %}
+                                {% if game.status == 'finished' or app.user == game.player1 %}
+                                    {{ game.player1Card1.number }}, {{ game.player1Card2.number }} y {{ game.player1Card3.number }}
+                                {% else %}
+                                    Cartas seleccionadas
+                                {% endif %}
+                            {% else %}
+                                Sin seleccionar
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td>{{ game.player2 ? game.player2.username : 'Pendiente' }}</td>
                     <td>
-                        {% if game.player2Card1 and game.player2Card2 %}
-                            {% if game.status == 'finished' or app.user == game.player2 %}
-                                {{ game.player2Card1.number }} y {{ game.player2Card2.number }}
+                        {% if game.gameMode == 1 %}
+                            {% if game.player2Card1 %}
+                                {% if game.status == 'finished' or app.user == game.player2 %}
+                                    {{ game.player2Card1.number }}
+                                {% else %}
+                                    Carta seleccionada
+                                {% endif %}
                             {% else %}
-                                Cartas seleccionadas
+                                Sin seleccionar
+                            {% endif %}
+                        {% elseif game.gameMode == 2 %}
+                            {% if game.player2Card1 and game.player2Card2 %}
+                                {% if game.status == 'finished' or app.user == game.player2 %}
+                                    {{ game.player2Card1.number }}, {{ game.player2Card2.number }}
+                                {% else %}
+                                    Cartas seleccionadas
+                                {% endif %}
+                            {% else %}
+                                Sin seleccionar
                             {% endif %}
                         {% else %}
-                            Sin seleccionar
+                            {% if game.player2Card1 and game.player2Card2 and game.player2Card3 %}
+                                {% if game.status == 'finished' or app.user == game.player2 %}
+                                    {{ game.player2Card1.number }}, {{ game.player2Card2.number }} y {{ game.player2Card3.number }}
+                                {% else %}
+                                    Cartas seleccionadas
+                                {% endif %}
+                            {% else %}
+                                Sin seleccionar
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td>
@@ -128,4 +172,4 @@
         </table>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

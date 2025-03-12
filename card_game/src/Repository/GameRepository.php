@@ -17,13 +17,26 @@ class GameRepository extends ServiceEntityRepository
     public function hasPlayerSelectedCards(Game $game, User $player): bool
     {
         if ($player === $game->getPlayer1()) {
-            return $game->getPlayer1Card1() !== null && $game->getPlayer1Card2() !== null;
+            return $game->getPlayer1Card1() !== null && 
+                   $game->getPlayer1Card2() !== null && 
+                   $game->getPlayer1Card3() !== null;
         } elseif ($player === $game->getPlayer2()) {
-            return $game->getPlayer2Card1() !== null && $game->getPlayer2Card2() !== null;
+            return $game->getPlayer2Card1() !== null && 
+                   $game->getPlayer2Card2() !== null && 
+                   $game->getPlayer2Card3() !== null;
         }
         return false;
     }
 
+    public function areAllCardsSelected(Game $game): bool
+    {
+        return $game->getPlayer1Card1() !== null && 
+               $game->getPlayer1Card2() !== null && 
+               $game->getPlayer1Card3() !== null && 
+               $game->getPlayer2Card1() !== null && 
+               $game->getPlayer2Card2() !== null && 
+               $game->getPlayer2Card3() !== null;
+    }
     public function isFinished(Game $game): bool
     {
         return $game->getStatus() === 'finished';
@@ -43,15 +56,6 @@ class GameRepository extends ServiceEntityRepository
 
         return false;
     }
-
-    public function areAllCardsSelected(Game $game): bool
-    {
-        return $game->getPlayer1Card1() !== null && 
-               $game->getPlayer1Card2() !== null && 
-               $game->getPlayer2Card1() !== null && 
-               $game->getPlayer2Card2() !== null;
-    }
-
     public function findByPlayer(User $player)
     {
         return $this->createQueryBuilder('g')
@@ -72,4 +76,4 @@ class GameRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-} 
+}

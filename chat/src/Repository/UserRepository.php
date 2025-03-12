@@ -69,10 +69,4 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getQuery()
             ->getResult();
     }
-
-    public function updateUserCurrentHall(User $user, ?Hall $hall): void
-    {
-        $user->setCurrentHall($hall);
-        $this->getEntityManager()->flush();
-    }
 }

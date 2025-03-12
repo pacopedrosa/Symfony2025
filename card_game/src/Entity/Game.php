@@ -29,6 +29,9 @@ class Game
     #[ORM\ManyToOne(targetEntity: Card::class)]
     #[ORM\JoinColumn(name: "player1_card2_id", nullable: true)]
     private ?Card $player1Card2 = null;
+    #[ORM\ManyToOne(targetEntity: Card::class)]
+    #[ORM\JoinColumn(name: "player1_card3_id", nullable: true)]
+    private ?Card $player1Card3 = null;
 
     #[ORM\ManyToOne(targetEntity: Card::class)]
     #[ORM\JoinColumn(name: "player2_card1_id", nullable: true)]
@@ -38,13 +41,28 @@ class Game
     #[ORM\JoinColumn(name: "player2_card2_id", nullable: true)]
     private ?Card $player2Card2 = null;
 
+    #[ORM\ManyToOne(targetEntity: Card::class)]
+    #[ORM\JoinColumn(name: "player2_card3_id", nullable: true)]
+    private ?Card $player2Card3 = null;
+
     #[ORM\Column(length: 20)]
     private ?string $status = null;
+    #[ORM\Column(type: 'integer')]
+    private int $gameMode = 3;
 
+    public function getGameMode(): int
+    {
+        return $this->gameMode;
+    }
+
+    public function setGameMode(int $gameMode): self
+    {
+        $this->gameMode = $gameMode;
+        return $this;
+    }
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $winner = null;
-
     #[ORM\Column(type: 'json')]
     private array $availableCards = [];
 
@@ -90,7 +108,16 @@ class Game
     {
         return $this->player1Card2;
     }
+    public function getPlayer1Card3(): ?Card
+    {
+        return $this->player1Card3;
+    }
 
+    public function setPlayer1Card3(?Card $player1Card3): self
+    {
+        $this->player1Card3 = $player1Card3;
+        return $this;
+    }
     public function setPlayer1Card2(?Card $player1Card2): self
     {
         $this->player1Card2 = $player1Card2;
@@ -116,6 +143,17 @@ class Game
     public function setPlayer2Card2(?Card $player2Card2): self
     {
         $this->player2Card2 = $player2Card2;
+        return $this;
+    }
+
+    public function getPlayer2Card3(): ?Card
+    {
+        return $this->player2Card3;
+    }
+
+    public function setPlayer2Card3(?Card $player2Card3): self
+    {
+        $this->player2Card3 = $player2Card3;
         return $this;
     }
 

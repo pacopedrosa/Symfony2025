@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Seleccionar Modo de Juego{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Seleccionar Modo de Juego</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Modo 1 Carta</h5>
+                    <p class="card-text">Cada jugador selecciona una carta. Gana el que tenga la carta más alta.</p>
+                    <form action="{{ path('game_new') }}" method="post">
+                        <input type="hidden" name="game_mode" value="1">
+                        <button type="submit" class="btn btn-primary">Jugar Modo 1 Carta</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Modo 2 Cartas</h5>
+                    <p class="card-text">Cada jugador selecciona dos cartas. Gana el que tenga la mejor combinación.</p>
+                    <form action="{{ path('game_new') }}" method="post">
+                        <input type="hidden" name="game_mode" value="2">
+                        <button type="submit" class="btn btn-primary">Jugar Modo 2 Cartas</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Modo 3 Cartas</h5>
+                    <p class="card-text">Cada jugador selecciona tres cartas. Gana el que tenga la mejor combinación.</p>
+                    <form action="{{ path('game_new') }}" method="post">
+                        <input type="hidden" name="game_mode" value="3">
+                        <button type="submit" class="btn btn-primary">Jugar Modo 3 Cartas</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -22,11 +22,8 @@ final class MessageController extends AbstractController
             $this->addFlash('error', 'Esta sala está inactiva y no se puede acceder.');
             return $this->redirectToRoute('app_hall_index');
         }
-
-        // Registrar que el usuario está en esta sala
-        $entityManager->getRepository(User::class)
-            ->updateUserCurrentHall($this->getUser(), $hall);
-
+        $this->getUser()->setCurrentHall($hall);
+        $entityManager->flush();
 
 
         $message = new Message();

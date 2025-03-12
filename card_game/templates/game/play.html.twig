@@ -1,10 +1,26 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Selecciona dos cartas{% endblock %}
+{% block title %}
+    {% if game.gameMode == 1 %}
+        Selecciona una carta
+    {% elseif game.gameMode == 2 %}
+        Selecciona dos cartas
+    {% else %}
+        Selecciona tres cartas
+    {% endif %}
+{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1>Selecciona dos cartas</h1>
+    <h1>
+        {% if game.gameMode == 1 %}
+            Selecciona una carta
+        {% elseif game.gameMode == 2 %}
+            Selecciona dos cartas
+        {% else %}
+            Selecciona tres cartas
+        {% endif %}
+    </h1>
     
     {% for message in app.flashes('error') %}
         <div class="alert alert-danger">
@@ -63,4 +79,4 @@
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 }
 </style>
-{% endblock %} 
+{% endblock %}

@@ -49,15 +49,22 @@ class GameController extends AbstractController
      * - Establece el jugador actual como Player1
      * - Almacena las cartas disponibles para la partida
      */
-    #[Route('/new', name: 'game_new', methods: ['GET'])]
-    public function new(): Response
+    #[Route('/new', name: 'game_new', methods: ['GET', 'POST'])]
+    public function new(Request $request): Response
     {
+        if ($request->isMethod('GET')) {
+            return $this->render('game/select_mode.html.twig');
+        }
+
+        $gameMode = $request->request->get('game_mode', 3);
+        
         $game = new Game();
         $game->setPlayer1($this->getUser());
         $game->setStatus('open');
+        $game->setGameMode($gameMode);
         
-        // Genera 8 cartas aleatorias para que ambos jugadores vean las mismas
-        $availableCards = $this->gameService->getRandomCards(8);
+        // Genera cartas aleatorias según el modo de juego
+        $availableCards = $this->gameService->getRandomCards($gameMode * 2);
         $cardIds = array_map(function($card) {
             return $card->getId();
         }, $availableCards);
@@ -112,14 +119,8 @@ class GameController extends AbstractController
 
         // Unir al jugador
         $game->setPlayer2($this->getUser());
-        
-        // Si el jugador 1 ya seleccionó, la partida queda en espera
-        if ($game->getPlayer1Card1() && $game->getPlayer1Card2()) {
-            $game->setStatus('waiting');
-        }
-
+        $game->setStatus('waiting');
         $this->entityManager->flush();
-
         $this->addFlash('success', '¡Te has unido a la partida! Selecciona tus cartas.');
         return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
     }
@@ -143,8 +144,16 @@ class GameController extends AbstractController
         }
 
         // Verifica que el jugador no haya seleccionado ya sus cartas
-        if (($currentUser === $game->getPlayer1() && $game->getPlayer1Card1()) ||
-            ($currentUser === $game->getPlayer2() && $game->getPlayer2Card1())) {
+        $hasSelectedCards = match ($game->getGameMode()) {
+            1 => ($currentUser === $game->getPlayer1() && $game->getPlayer1Card1()) ||
+                 ($currentUser === $game->getPlayer2() && $game->getPlayer2Card1()),
+            2 => ($currentUser === $game->getPlayer1() && $game->getPlayer1Card1() && $game->getPlayer1Card2()) ||
+                 ($currentUser === $game->getPlayer2() && $game->getPlayer2Card1() && $game->getPlayer2Card2()),
+            3 => ($currentUser === $game->getPlayer1() && $game->getPlayer1Card1() && $game->getPlayer1Card2() && $game->getPlayer1Card3()) ||
+                 ($currentUser === $game->getPlayer2() && $game->getPlayer2Card1() && $game->getPlayer2Card2() && $game->getPlayer2Card3()),
+        };
+
+        if ($hasSelectedCards) {
             $this->addFlash('error', 'Ya has seleccionado tus cartas.');
             return $this->redirectToRoute('game_show', ['id' => $game->getId()]);
         }
@@ -157,24 +166,28 @@ class GameController extends AbstractController
         if ($request->isMethod('POST')) {
             $selectedCards = $request->request->all('selected_cards');
             
-            // Valida que se seleccionen exactamente 2 cartas
-            if (!is_array($selectedCards) || count($selectedCards) !== 2) {
-                $this->addFlash('error', 'Debes seleccionar exactamente 2 cartas.');
+            // Get required number of cards based on game mode
+            $requiredCards = $game->getGameMode();
+            
+            // Validate that exactly the required number of cards are selected
+            if (!is_array($selectedCards) || count($selectedCards) !== $requiredCards) {
+                $this->addFlash('error', "Debes seleccionar exactamente {$requiredCards} carta(s).");
                 return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
             }
-
-            // Obtiene las cartas seleccionadas de la base de datos
-            $card1 = $this->entityManager->getRepository(Card::class)->find($selectedCards[0]);
-            $card2 = $this->entityManager->getRepository(Card::class)->find($selectedCards[1]);
-
-            if (!$card1 || !$card2) {
-                $this->addFlash('error', 'Una o ambas cartas seleccionadas no son válidas.');
-                return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
+            $cards = [];
+            for ($i = 0; $i < $requiredCards; $i++) {
+                $cards[$i] = $this->entityManager->getRepository(Card::class)->find($selectedCards[$i]);
+                if (!$cards[$i]) {
+                    $this->addFlash('error', 'Una o más cartas seleccionadas no son válidas.');
+                    return $this->redirectToRoute('game_play', ['id' => $game->getId()]);
+                }
             }
-
+            
+            // Set cards based on game mode
             if ($currentUser === $game->getPlayer1()) {
-                $game->setPlayer1Card1($card1);
-                $game->setPlayer1Card2($card2);
+                $game->setPlayer1Card1($cards[0]);
+                if ($requiredCards > 1) $game->setPlayer1Card2($cards[1]);
+                if ($requiredCards > 2) $game->setPlayer1Card3($cards[2]);
                 // Actualiza el estado según si hay jugador 2
                 if (!$game->getPlayer2()) {
                     $game->setStatus('open');
@@ -182,19 +195,22 @@ class GameController extends AbstractController
                     $game->setStatus('waiting');
                 }
             } else {
-                $game->setPlayer2Card1($card1);
-                $game->setPlayer2Card2($card2);
+                $game->setPlayer2Card1($cards[0]);
+                if ($requiredCards > 1) $game->setPlayer2Card2($cards[1]);
+                if ($requiredCards > 2) $game->setPlayer2Card3($cards[2]);
                 
-                // Si ambos jugadores han seleccionado, determina el ganador
-                if ($game->getPlayer1Card1() && $game->getPlayer1Card2()) {
-                    $game->setStatus('finished');
-                    $winner = $this->gameService->determineWinner($game);
-                    if ($winner) {
-                        $game->setWinner($winner);
-                    }
+                // Check if both players have selected their cards based on game mode
+                $player1Ready = match ($game->getGameMode()) {
+                    1 => $game->getPlayer1Card1() !== null,
+                    2 => $game->getPlayer1Card1() !== null && $game->getPlayer1Card2() !== null,
+                    3 => $game->getPlayer1Card1() !== null && $game->getPlayer1Card2() !== null && $game->getPlayer1Card3() !== null,
+                };
+                $game->setStatus('finished');
+                $winner = $this->gameService->determineWinner($game);
+                if ($winner) {
+                    $game->setWinner($winner);
                 }
             }
-
             $this->entityManager->flush();
             
             $this->addFlash('success', 'Has seleccionado tus cartas correctamente.');
@@ -341,4 +357,4 @@ class GameController extends AbstractController
         
         return $this->redirectToRoute('game_play', ['id' => $newGame->getId()]);
     }
-} 
+}

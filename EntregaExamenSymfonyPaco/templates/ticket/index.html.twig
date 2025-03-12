@@ -1,0 +1,176 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tickets Pendientes{% endblock %}
+
+{% block body %}
+<div class="worker-container">
+    <header class="page-header">
+        <h1>Tickets Pendientes</h1>
+        <p class="subtitle">Lista de tickets que requieren atención</p>
+    </header>
+
+    <div class="tickets-container">
+        {% for ticket in tickets %}
+            {% if ticket.state != 2 %}
+                <div class="ticket-card">
+                    <div class="ticket-header">
+                        <h2>{{ ticket.title }}</h2>
+                        <span class="status-badge {% if ticket.state == 0 %}status-open{% else %}status-progress{% endif %}">
+                            {% if ticket.state == 0 %}
+                                Abierto
+                            {% else %}
+                                En Curso
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="ticket-content">
+                        <p class="ticket-message">{{ ticket.message }}</p>
+                        <p class="ticket-client">Cliente: {{ ticket.cliente.username }}</p>
+                    </div>
+
+                    {% if ticket.messages|length > 0 %}
+                        <div class="messages-section">
+                            <h3>Mensajes</h3>
+                            <div class="messages-list">
+                                {% for message in ticket.messages %}
+                                    <div class="message-card">
+                                        <p>{{ message.content }}</p>
+                                        <div class="message-meta">
+                                            <small>Por: {{ message.author.username }}</small>
+                                            <small>{{ message.createdAt|date('d/m/Y H:i') }}</small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if ticket.state == 0 or ticket.owner == app.user %}
+                        <div class="ticket-actions">
+                            <a href="{{ path('app_ticket_response', {'id': ticket.id}) }}" class="btn-primary">Responder</a>
+                            <form method="POST" action="{{ path('app_ticket_close', {'id': ticket.id}) }}">
+                                <button type="submit" class="btn-danger" 
+                                        onclick="return confirm('¿Estás seguro de que quieres cerrar este ticket?')">
+                                    Cerrar Ticket
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="page-actions">
+        <a href="{{ path('app_main') }}" class="btn-back">Volver al Inicio</a>
+    </div>
+</div>
+
+<style>
+    .worker-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .subtitle {
+        color: #7f8c8d;
+    }
+
+    .tickets-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .ticket-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        border-left: 4px solid #3498db;
+    }
+
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .status-open { background: #e8f5e9; color: #27ae60; }
+    .status-progress { background: #e3f2fd; color: #2980b9; }
+
+    .ticket-content {
+        margin-bottom: 20px;
+    }
+
+    .messages-section {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .message-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+    .message-meta {
+        display: flex;
+        justify-content: space-between;
+        color: #7f8c8d;
+        margin-top: 8px;
+        font-size: 0.9em;
+    }
+
+    .ticket-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btn-primary, .btn-danger, .btn-back {
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        color: white;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary { background-color: #3498db; }
+    .btn-danger { background-color: #e74c3c; }
+    .btn-back { background-color: #34495e; }
+
+    .page-actions {
+        text-align: center;
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
